@@ -1,0 +1,78 @@
+:root {
+  /* ── Backgrounds ── */
+  --bg-void:  #070A0F;
+  --bg-deep:  #0D1117;
+  --surface:  #151C26;
+
+  /* ── Glass ── */
+  --glass:        rgba(255, 255, 255, 0.04);
+  --glass-hover:  rgba(255, 255, 255, 0.07);
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --glass-blur:   blur(12px);
+
+  /* ── Gold accent ── */
+  --gold:      #C9A84C;
+  --gold-soft: rgba(201, 168, 76, 0.15);
+  --gold-dim:  rgba(201, 168, 76, 0.4);
+
+  /* ── Text ── */
+  --text-primary:   #F0F4F8;
+  --text-secondary: #8896A8;
+  --text-muted:     #4A5568;
+
+  /* ── Sentiment ── */
+  --red:   #E05252;
+  --green: #52C97A;
+  --amber: #E09A3A;
+
+  --red-soft:   rgba(224, 82, 82, 0.15);
+  --green-soft: rgba(82, 201, 122, 0.15);
+  --amber-soft: rgba(224, 154, 58, 0.15);
+
+  /* ── Typography ── */
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans:  'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Spacing (8pt grid) ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Border radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Z-index layers ── */
+  --z-globe:   0;
+  --z-panel:   10;
+  --z-sidebar: 20;
+  --z-nav:     30;
+  --z-modal:   40;
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 420ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 0 20px rgba(201, 168, 76, 0.2);
+
+  /* ── Navbar height ── */
+  --nav-height: 60px;
+  --timeline-height: 72px;
+}

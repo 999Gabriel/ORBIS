@@ -41,3 +41,7 @@ No build/test/lint commands exist yet — nothing is scaffolded. When setting up
 ## Working directory note
 
 The parent folder `SWP-Web/` contains unrelated school exercises (PowerGuard, Mitschriften, etc.) with heavy `git status` noise — ignore changes outside this `news globe project/` directory unless explicitly asked.
+
+## Updates
+
+I stopped the last session after "Write LayerPanel.vue" so moving on the next time will start from there. you got your plan in mind and see the code already written.
