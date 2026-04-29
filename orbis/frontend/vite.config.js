@@ -19,6 +19,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ['globe.gl'],
+    include: ['globe.gl', 'three-globe', 'frame-ticker'],
   },
 })

@@ -22,12 +22,16 @@ export default {
     infrastructure: 'Infrastructure',
   },
   sidebar: {
+    aria:           'Story details',
     aiSummary:      'AI Summary',
     readArticle:    'Read full article',
     close:          'Close',
     noSelection:    'Click a pin on the globe to explore a story.',
     timestamp:      'Published',
     source:         'Source',
+    justNow:        'just now',
+    minutesAgo:     '{n}m ago',
+    hoursAgo:       '{n}h ago',
     sentiment: {
       positive: 'Positive',
       neutral:  'Neutral',
@@ -35,9 +39,12 @@ export default {
     },
   },
   timeline: {
+    aria:  'Timeline range',
+    title: 'Timeline',
     label: 'Timeline',
     past:  '30 days ago',
     now:   'Now',
+    live:  'Live · now',
   },
   globe: {
     hint: 'Activate a layer to explore world events.',

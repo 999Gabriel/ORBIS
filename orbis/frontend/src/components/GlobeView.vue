@@ -1,6 +1,5 @@
 <template>
   <div ref="containerRef" class="globe-wrap">
-    <!-- Globe hint when no layers active -->
     <Transition name="fade">
       <div v-if="layersStore.activeCount === 0" class="globe-hint">
         <p class="globe-hint__text">{{ t('globe.hint') }}</p>
@@ -18,7 +17,7 @@ import { useLayersStore } from '@/stores/layers.js'
 
 const { t } = useI18n()
 const containerRef = ref(null)
-const { init, updatePoints, flyTo, resize, isReady } = useGlobe()
+const { init, updatePoints, flyTo, resize } = useGlobe()
 const newsStore = useNewsStore()
 const layersStore = useLayersStore()
 
@@ -27,8 +26,6 @@ onMounted(async () => {
     onPinClick: (pin) => newsStore.selectPin(pin),
     onPinHover: () => {},
   })
-
-  // Initial point state
   refreshPoints()
 })
 
@@ -37,19 +34,13 @@ function refreshPoints() {
   updatePoints(showPins ? newsStore.filteredPins : [], newsStore.selectedPin)
 }
 
-// Sync points when layer toggled
 watch(() => layersStore.isActive('news'), refreshPoints)
-
-// Sync points when filter changes
 watch(() => newsStore.filteredPins, refreshPoints, { deep: true })
-
-// Fly to pin + re-render selected state
 watch(() => newsStore.selectedPin, (pin) => {
   if (pin) flyTo(pin.lat, pin.lon, 1.8, 900)
   refreshPoints()
 })
 
-// Window resize
 function handleResize() {
   if (containerRef.value) {
     resize(containerRef.value.offsetWidth, containerRef.value.offsetHeight)
@@ -61,15 +52,13 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
 
 <style scoped>
 .globe-wrap {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: var(--z-globe);
   cursor: grab;
-  background: var(--bg-void);
+  background: var(--canvas);
 }
-.globe-wrap:active {
-  cursor: grabbing;
-}
+.globe-wrap:active { cursor: grabbing; }
 
 .globe-hint {
   position: absolute;
@@ -81,22 +70,20 @@ onUnmounted(() => window.removeEventListener('resize', handleResize))
 }
 
 .globe-hint__text {
-  font-size: 12px;
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
-  font-family: var(--font-mono);
-  background: var(--glass);
-  border: 1px solid var(--border);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  padding: var(--space-3) var(--space-5);
+  background: var(--canvas-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
 }
 
-/* fade transition */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity var(--transition-slow), transform var(--transition-slow);
+  transition: opacity var(--t-slow), transform var(--t-slow);
 }
 .fade-enter-from,
 .fade-leave-to {

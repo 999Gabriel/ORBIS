@@ -11,13 +11,16 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: var(--bg-void);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
   font-size: 14px;
+  font-weight: 400;
   line-height: 1.5;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 #app {
@@ -27,33 +30,39 @@ html, body {
   position: relative;
 }
 
-/* ── Glass panel utility ── */
-.glass-panel {
-  background: var(--glass);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+/* ── Soft surface utility (replaces .glass-panel) ── */
+.surface {
+  background: var(--canvas-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
 }
 
-/* ── Typography utilities ── */
-.font-serif { font-family: var(--font-serif); }
-.font-mono  { font-family: var(--font-mono);  }
+/* ── Eyebrow / label utility ── */
+.eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+/* ── Number / data utility ── */
+.numeric {
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--line);
   border-radius: 2px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+::-webkit-scrollbar-thumb:hover { background: var(--line-strong); }
 
 /* ── Focus ring ── */
 :focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 1px solid var(--ink);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -68,38 +77,18 @@ button {
   color: inherit;
 }
 
-/* ── Link reset ── */
 a {
   color: inherit;
   text-decoration: none;
 }
 
-/* ── LIVE pulse animation ── */
-@keyframes pulse-live {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.85); }
+/* ── Animations ── */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
 }
 
-/* ── Sidebar slide transition ── */
-@keyframes slide-in-right {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-
-@keyframes slide-out-right {
-  from { transform: translateX(0); }
-  to   { transform: translateX(100%); }
-}
-
-/* ── Fade in ── */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(6px); }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Pin pop ── */
-@keyframes pin-pop {
-  0%   { transform: scale(0); opacity: 0; }
-  60%  { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
 }

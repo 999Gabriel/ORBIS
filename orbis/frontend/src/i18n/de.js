@@ -22,12 +22,16 @@ export default {
     infrastructure: 'Infrastruktur',
   },
   sidebar: {
+    aria:        'Details zur Meldung',
     aiSummary:   'KI-Zusammenfassung',
     readArticle: 'Vollständigen Artikel lesen',
     close:       'Schließen',
     noSelection: 'Klicke auf einen Pin auf dem Globus, um eine Geschichte zu erkunden.',
     timestamp:   'Veröffentlicht',
     source:      'Quelle',
+    justNow:     'gerade eben',
+    minutesAgo:  'vor {n} Min.',
+    hoursAgo:    'vor {n} Std.',
     sentiment: {
       positive: 'Positiv',
       neutral:  'Neutral',
@@ -35,9 +39,12 @@ export default {
     },
   },
   timeline: {
+    aria:  'Zeitstrahl',
+    title: 'Zeitstrahl',
     label: 'Zeitstrahl',
     past:  'Vor 30 Tagen',
     now:   'Jetzt',
+    live:  'Live · jetzt',
   },
   globe: {
     hint: 'Aktiviere eine Ebene, um Weltereignisse zu erkunden.',

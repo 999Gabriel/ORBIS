@@ -1,29 +1,38 @@
 <template>
-  <nav class="navbar glass-panel">
-    <!-- Left: wordmark -->
-    <div class="navbar__brand">
-      <span class="navbar__logo font-serif">ORBIS</span>
-      <span class="navbar__live">
+  <nav class="navbar" role="navigation">
+    <div class="navbar__left">
+      <span class="navbar__brand">ORBIS</span>
+      <span class="navbar__live numeric">
         <span class="navbar__live-dot" aria-hidden="true"></span>
         {{ t('nav.live') }}
       </span>
     </div>
 
-    <!-- Center: tagline -->
-    <p class="navbar__tagline">{{ t('nav.tagline') }}</p>
+    <div class="navbar__center" role="group" :aria-label="t('layers.title')">
+      <button
+        v-for="layer in layers"
+        :key="layer.id"
+        class="pill"
+        :class="{ 'pill--active': layersStore.isActive(layer.id) }"
+        @click="layersStore.toggle(layer.id)"
+        :aria-pressed="layersStore.isActive(layer.id)"
+      >
+        <span class="pill__label">{{ t(`layers.${layer.id}`) }}</span>
+        <span v-if="layersStore.isActive(layer.id)" class="pill__dot" aria-hidden="true"></span>
+      </button>
+    </div>
 
-    <!-- Right: language switcher -->
-    <div class="navbar__actions">
-      <div class="lang-switcher" role="group" :aria-label="'Language / Sprache'">
+    <div class="navbar__right">
+      <div class="lang" role="group" aria-label="Language">
         <button
-          class="lang-btn"
-          :class="{ 'lang-btn--active': locale === 'en' }"
+          class="lang__btn"
+          :class="{ 'lang__btn--active': locale === 'en' }"
           @click="switchLocale('en')"
         >EN</button>
-        <span class="lang-divider" aria-hidden="true">|</span>
+        <span class="lang__sep" aria-hidden="true"></span>
         <button
-          class="lang-btn"
-          :class="{ 'lang-btn--active': locale === 'de' }"
+          class="lang__btn"
+          :class="{ 'lang__btn--active': locale === 'de' }"
           @click="switchLocale('de')"
         >DE</button>
       </div>
@@ -34,12 +43,20 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n/index.js'
+import { useLayersStore } from '@/stores/layers.js'
 
 const { t, locale } = useI18n()
+const layersStore = useLayersStore()
 
-function switchLocale(lang) {
-  setLocale(lang)
-}
+const layers = [
+  { id: 'news' },
+  { id: 'flights' },
+  { id: 'earthquakes' },
+  { id: 'fires' },
+  { id: 'weather' },
+]
+
+function switchLocale(lang) { setLocale(lang) }
 </script>
 
 <style scoped>
@@ -50,96 +67,109 @@ function switchLocale(lang) {
   right: 0;
   height: var(--nav-height);
   z-index: var(--z-nav);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 var(--space-6);
+  background: linear-gradient(to bottom, var(--canvas) 0%, rgba(10,10,11,0.6) 80%, transparent 100%);
+}
+
+.navbar__left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-6);
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  gap: var(--space-4);
 }
 
 .navbar__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex: 0 0 auto;
-}
-
-.navbar__logo {
-  font-size: 22px;
-  font-style: italic;
-  letter-spacing: 0.06em;
-  color: var(--text-primary);
-  line-height: 1;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
 }
 
 .navbar__live {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--red);
   font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--ink-mute);
 }
 
 .navbar__live-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--red);
-  animation: pulse-live 1.8s ease-in-out infinite;
+  background: var(--alert);
+  animation: pulse-soft 1.8s ease-in-out infinite;
 }
 
-.navbar__tagline {
-  font-size: 12px;
-  color: var(--text-secondary);
-  letter-spacing: 0.04em;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.navbar__actions {
-  flex: 0 0 auto;
+.navbar__center {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-1);
+  padding: 4px;
+  background: var(--canvas-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
 }
 
-/* Language switcher */
-.lang-switcher {
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-mute);
+  border-radius: var(--radius-pill);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.pill:hover { color: var(--ink); }
+
+.pill--active {
+  color: var(--canvas);
+  background: var(--ink);
+}
+
+.pill__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--alert);
+}
+
+.navbar__right {
   display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.lang {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.lang-btn {
-  font-family: var(--font-mono);
+.lang__btn {
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.1em;
-  color: var(--text-secondary);
+  color: var(--ink-whisper);
   padding: 4px 2px;
-  border-bottom: 1px solid transparent;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
+  transition: color var(--t-fast);
 }
 
-.lang-btn:hover {
-  color: var(--text-primary);
-}
+.lang__btn:hover { color: var(--ink-mute); }
+.lang__btn--active { color: var(--ink); }
 
-.lang-btn--active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
-}
-
-.lang-divider {
-  color: var(--text-muted);
-  font-size: 10px;
-  user-select: none;
+.lang__sep {
+  width: 1px;
+  height: 10px;
+  background: var(--line-strong);
 }
 </style>

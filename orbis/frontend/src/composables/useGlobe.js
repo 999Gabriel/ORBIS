@@ -4,9 +4,9 @@ const GLOBE_IMAGE_URL = '//unpkg.com/three-globe/example/img/earth-night.jpg'
 const BG_IMAGE_URL    = '//unpkg.com/three-globe/example/img/night-sky.png'
 
 export const SENTIMENT_COLORS = {
-  positive: '#52C97A',
-  neutral:  '#E09A3A',
-  negative: '#E05252',
+  positive: '#A3D9B1',
+  neutral:  '#DFD2BC',
+  negative: '#E8A5A5',
 }
 
 export function useGlobe() {
@@ -16,14 +16,17 @@ export function useGlobe() {
   async function init(containerEl, { onPinClick, onPinHover } = {}) {
     const { default: Globe } = await import('globe.gl')
 
+    const w = containerEl.offsetWidth || window.innerWidth
+    const h = containerEl.offsetHeight || window.innerHeight
+
     const globe = Globe()
       .globeImageUrl(GLOBE_IMAGE_URL)
       .backgroundImageUrl(BG_IMAGE_URL)
-      .atmosphereColor('#4a90e2')
-      .atmosphereAltitude(0.18)
-      .width(containerEl.offsetWidth)
-      .height(containerEl.offsetHeight)
-      // points layer (news pins)
+      .backgroundColor('#0A0A0B')
+      .atmosphereColor('#6B89C4')
+      .atmosphereAltitude(0.16)
+      .width(w)
+      .height(h)
       .pointsData([])
       .pointLat('lat')
       .pointLng('lon')
@@ -32,22 +35,20 @@ export function useGlobe() {
       .pointAltitude(0.015)
       .pointResolution(16)
       .pointsMerge(false)
-      .onPointClick((point, _event) => onPinClick?.(point))
+      .onPointClick((point) => onPinClick?.(point))
       .onPointHover((point) => {
         containerEl.style.cursor = point ? 'pointer' : 'grab'
         onPinHover?.(point)
       })
       (containerEl)
 
-    // Controls
     globe.controls().autoRotate = true
-    globe.controls().autoRotateSpeed = 0.35
+    globe.controls().autoRotateSpeed = 0.3
     globe.controls().enableDamping = true
     globe.controls().dampingFactor = 0.1
     globe.controls().minDistance = 200
     globe.controls().maxDistance = 800
 
-    // Stop auto-rotate on user interaction, resume after 3s
     globe.controls().addEventListener('start', () => {
       globe.controls().autoRotate = false
     })
