@@ -186,6 +186,147 @@ orbis/
 
 ---
 
+## Technische Umsetzung — Geodaten & News-Flow
+
+### 1. News-Daten holen: GDELT API
+
+GDELT (Global Database of Events, Language, and Tone) ist die primäre Datenquelle. Die API liefert weltweite News-Artikel **inklusive Geokoordinaten** — kostenlos, kein API-Key nötig.
+
+**Endpoint:**
+```
+GET https://api.gdeltproject.org/api/v2/doc/doc
+  ?query=<suchbegriff>
+  &mode=artlist
+  &maxrecords=75
+  &format=json
+```
+
+**Response-Felder die wir brauchen:**
+
+| Feld | Bedeutung |
+|---|---|
+| `title` | Schlagzeile |
+| `url` | Link zum Originalartikel |
+| `domain` | Quellenname (z.B. bbc.com) |
+| `seendate` | Datum/Uhrzeit der Veröffentlichung |
+| `sourcecountry` | Land der Quelle |
+| `socialimage` | Vorschaubild-URL |
+
+> **Wichtig:** GDELT-Artikel haben *keine direkte* `lat`/`lon` in der Doc-API. Die Koordinaten kommen entweder aus dem GEO-Endpoint (`/api/v2/geo/geo`) oder werden via Claude aus dem Artikeltext extrahiert (siehe Punkt 2).
+
+**Backend-Ablauf (APScheduler, alle 15 Minuten):**
+1. `gdelt.py` fetcht neue Artikel via httpx
+2. Artikel werden in SQLite gecacht (`news`-Tabelle)
+3. Für jeden neuen Artikel wird Claude aufgerufen (Location + Sentiment + Summary)
+4. Ergebnis wird in der DB gespeichert — Frontend ruft nur noch `/api/news` ab
+
+---
+
+### 2. Geodaten: Location Extraction via Claude
+
+Für Artikel ohne direkte Koordinaten extrahiert Claude die geografische Location aus dem Titeltext:
+
+**Prompt:**
+```
+"Extract the primary geographic location from this news article.
+Return only JSON: { "country": "...", "city": "...", "lat": 0.0, "lon": 0.0 }"
+```
+
+**Ablauf:**
+```
+Artikel-Titel → Claude API → { country, city, lat, lon } → SQLite gespeichert
+```
+
+- Claude gibt strukturiertes JSON zurück (kein Parsing-Aufwand)
+- Koordinaten werden **einmalig** berechnet und gecacht — kein API-Call bei jedem Frontend-Request
+- Falls Claude keine Location finden kann → Artikel wird nicht als Pin angezeigt
+
+---
+
+### 3. Pins auf dem Globus: globe.gl
+
+`globe.gl` rendert die News als farbige Punkte auf dem 3D-Globus.
+
+**Kern-Setup in `useGlobe.js`:**
+```js
+import Globe from 'globe.gl'
+
+const globe = Globe()(containerElement)
+  .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+  .backgroundColor('#070A0F')
+  // News-Pins:
+  .pointsData(newsArticles)          // Array von Artikel-Objekten
+  .pointLat(d => d.lat)
+  .pointLng(d => d.lon)
+  .pointColor(d => sentimentColor(d.sentiment))  // rot / amber / grün
+  .pointAltitude(0.015)
+  .pointRadius(0.4)
+  .onPointClick(article => {
+    newsStore.selectArticle(article)  // Pinia Store
+  })
+```
+
+**Sentiment → Farbe:**
+```js
+function sentimentColor(sentiment) {
+  if (sentiment === 'positive') return '#52C97A'  // --green
+  if (sentiment === 'negative') return '#E05252'  // --red
+  return '#E09A3A'                                 // --amber (neutral)
+}
+```
+
+**Aktiver Pin** (angeklickt): goldener Ring via `.pointColor` + `.pointRadius` erhöht.
+
+---
+
+### 4. Klick auf Pin → NewsSidebar
+
+**Datenfluss:**
+```
+User klickt Pin
+  → onPointClick(article) in useGlobe.js
+  → newsStore.selectArticle(article)   ← Pinia Store
+  → NewsSidebar.vue reagiert via computed: newsStore.selectedArticle
+  → Sidebar slides in von rechts (CSS transition)
+```
+
+**NewsSidebar — Tab-Struktur:**
+
+| Tab | Inhalt |
+|---|---|
+| **Summary** | Claude 3-Satz-Zusammenfassung (`summary`-Feld aus DB) |
+| **Details** | Datum, Quelle/Domain, Land, Koordinaten (JetBrains Mono) |
+| **Original** | Externer Link zum Artikel (`<a target="_blank">`) + Vorschaubild |
+
+**Sidebar schließen:** Klick auf X-Button oder Klick außerhalb (auf den Globus) → `newsStore.selectArticle(null)`.
+
+---
+
+### 5. Datenfluss Ende-zu-Ende (Zusammenfassung)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  GDELT API  →  gdelt.py  →  SQLite (gecacht)        │
+│                    ↓                                 │
+│              Claude API (einmalig pro Artikel):      │
+│              • Location → lat/lon                    │
+│              • Sentiment → positiv/neutral/negativ   │
+│              • Summary → 3 Sätze                     │
+│                    ↓                                 │
+│          FastAPI /api/news  →  Frontend              │
+│                    ↓                                 │
+│     useGlobe.js: pointsData([{lat, lon, ...}])       │
+│                    ↓                                 │
+│         globe.gl rendert farbige Pins                │
+│                    ↓                                 │
+│     User klickt Pin → NewsSidebar öffnet sich        │
+└─────────────────────────────────────────────────────┘
+```
+
+**Keine Daten sind hardcoded.** APScheduler fetcht alle 15 Minuten frische Artikel. Erste Daten sind ~30 Sekunden nach Backend-Start verfügbar.
+
+---
+
 ## Entwicklungs-Roadmap
 
 | Woche | Ziel |

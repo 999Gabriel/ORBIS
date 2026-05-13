@@ -191,23 +191,75 @@ export const useNewsStore = defineStore('news', () => {
   const pins = ref(MOCK_NEWS)
   const selectedPin = ref(null)
   const activeFilter = ref('all')
+  const dayOffset = ref(0)       // 0 = live/all, N = show articles from N days ago
+  const loading = ref(false)
+  const refreshing = ref(false)
+  const usingMockData = ref(true)
 
   const filteredPins = computed(() => {
-    if (activeFilter.value === 'all') return pins.value
-    return pins.value.filter(p => p.category === activeFilter.value)
+    let result = pins.value
+
+    // Category filter
+    if (activeFilter.value !== 'all') {
+      result = result.filter(p => p.category === activeFilter.value)
+    }
+
+    // Timeline filter: dayOffset > 0 → show only that specific day's articles
+    if (dayOffset.value > 0) {
+      const dayStart = Date.now() - dayOffset.value * 86_400_000
+      const dayEnd   = Date.now() - (dayOffset.value - 1) * 86_400_000
+      result = result.filter(p => p.timestamp >= dayStart && p.timestamp < dayEnd)
+    }
+
+    return result
   })
 
-  function selectPin(pin) {
-    selectedPin.value = pin
+  async function fetchNews() {
+    loading.value = true
+    try {
+      const res = await fetch('/api/news?limit=200')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) {
+        pins.value = data
+        usingMockData.value = false
+      }
+    } catch (e) {
+      console.warn('[news] backend unavailable, using mock data:', e.message)
+      pins.value = MOCK_NEWS
+      usingMockData.value = true
+    } finally {
+      loading.value = false
+    }
   }
 
-  function clearPin() {
-    selectedPin.value = null
+  async function triggerRefresh() {
+    if (refreshing.value) return
+    refreshing.value = true
+    try {
+      await fetch('/api/news/refresh', { method: 'POST' })
+      // Poll every 3s until new articles appear
+      const before = pins.value.length
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 3000))
+        await fetchNews()
+        if (pins.value.length > before) break
+      }
+    } catch (e) {
+      console.warn('[news] refresh failed:', e.message)
+    } finally {
+      refreshing.value = false
+    }
   }
 
-  function setFilter(category) {
-    activeFilter.value = category
-  }
+  function selectPin(pin) { selectedPin.value = pin }
+  function clearPin()     { selectedPin.value = null }
+  function setFilter(cat) { activeFilter.value = cat }
+  function setDayOffset(n){ dayOffset.value = n }
 
-  return { pins, selectedPin, activeFilter, filteredPins, selectPin, clearPin, setFilter }
+  return {
+    pins, selectedPin, activeFilter, dayOffset,
+    filteredPins, loading, refreshing, usingMockData,
+    fetchNews, triggerRefresh, selectPin, clearPin, setFilter, setDayOffset,
+  }
 })

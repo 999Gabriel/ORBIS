@@ -49,4 +49,8 @@ export default {
   globe: {
     hint: 'Aktiviere eine Ebene, um Weltereignisse zu erkunden.',
   },
+  cluster: {
+    aria:     'Artikel an diesem Ort',
+    articles: 'Artikel an diesem Ort',
+  },
 }

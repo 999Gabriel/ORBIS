@@ -1,35 +1,32 @@
 :root {
-  /* ── Canvas ── */
-  --canvas:        #0A0A0B;
-  --canvas-soft:   #111113;
-  --surface:       rgba(255, 255, 255, 0.035);
-  --surface-hover: rgba(255, 255, 255, 0.07);
+  /* ── Canvas (white, matching the logo) ── */
+  --canvas:      #FEFEFE;
+  --canvas-soft: #F5F5F5;
 
-  /* ── Ink (text) ── */
-  --ink:           #FAFAF7;
-  --ink-mute:      rgba(250, 250, 247, 0.58);
-  --ink-whisper:   rgba(250, 250, 247, 0.32);
+  /* ── Surfaces ── */
+  --surface:       rgba(0, 0, 0, 0.04);
+  --surface-hover: rgba(0, 0, 0, 0.07);
 
   /* ── Lines ── */
-  --line:          rgba(250, 250, 247, 0.10);
-  --line-strong:   rgba(250, 250, 247, 0.20);
+  --line:        rgba(0, 0, 0, 0.10);
+  --line-strong: rgba(0, 0, 0, 0.22);
 
-  /* ── Pastel accents ── */
-  --navy:          #6B89C4;
-  --navy-soft:     rgba(107, 137, 196, 0.18);
-  --beige:         #DFD2BC;
-  --beige-soft:    rgba(223, 210, 188, 0.18);
-  --alert:         #F3C843;
-  --alert-soft:    rgba(243, 200, 67, 0.16);
+  /* ── Ink ── */
+  --ink:         #0A0A0B;
+  --ink-mute:    rgba(10, 10, 11, 0.52);
+  --ink-whisper: rgba(10, 10, 11, 0.30);
 
-  /* ── Sentiment (pastel) ── */
-  --positive:      #A3D9B1;
-  --neutral:       #DFD2BC;
-  --negative:      #E8A5A5;
+  /* ── Semantic (same as logo — black + one alert amber) ── */
+  --alert:    #D4860A;
+  --positive: #2D7A4A;
+  --neutral:  rgba(10, 10, 11, 0.45);
+  --negative: #B83232;
 
-  /* ── Typography ── */
-  --font-display:  'DM Sans', system-ui, -apple-system, sans-serif;
-  --font-body:     'DM Sans', system-ui, -apple-system, sans-serif;
+  /* ── Fonts ── */
+  --font-display:   'Zen Dots', system-ui, sans-serif;
+  --font-accent:    'Geostar Fill', 'Zen Dots', sans-serif;
+  --font-pinstripe: 'Alumni Sans Pinstripe', system-ui, sans-serif;
+  --font-body:      system-ui, -apple-system, sans-serif;
 
   /* ── Spacing (8pt grid) ── */
   --space-1:  4px;
@@ -43,14 +40,14 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* ── Border radius ── */
-  --radius-xs:   4px;
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   20px;
-  --radius-pill: 999px;
+  /* ── Radius ── */
+  --radius-xs:   3px;
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-pill: 9999px;
 
-  /* ── Z-index layers ── */
+  /* ── Z-layers ── */
   --z-globe:   0;
   --z-panel:   10;
   --z-sidebar: 20;
@@ -58,13 +55,13 @@
   --z-modal:   40;
 
   /* ── Transitions ── */
-  --t-fast: 160ms cubic-bezier(0.22, 1, 0.36, 1);
-  --t-base: 280ms cubic-bezier(0.22, 1, 0.36, 1);
-  --t-slow: 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 130ms ease;
+  --t-base: 230ms ease;
+  --t-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ── Layout ── */
-  --nav-height:      64px;
-  --subnav-height:   44px;
-  --timeline-height: 64px;
+  --nav-height:      56px;
+  --subnav-height:   38px;
+  --timeline-height: 56px;
   --sidebar-width:   400px;
 }

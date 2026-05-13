@@ -1,0 +1,14 @@
+# Backend
+orbis/backend/.env
+orbis/backend/.venv/
+orbis/backend/__pycache__/
+orbis/backend/**/__pycache__/
+orbis/backend/*.db
+
+# Frontend
+orbis/frontend/.env
+orbis/frontend/node_modules/
+orbis/frontend/dist/
+
+# OS
+.DS_Store

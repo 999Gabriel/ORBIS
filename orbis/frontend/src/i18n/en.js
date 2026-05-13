@@ -49,4 +49,8 @@ export default {
   globe: {
     hint: 'Activate a layer to explore world events.',
   },
+  cluster: {
+    aria:     'Articles at this location',
+    articles: 'articles at this location',
+  },
 }

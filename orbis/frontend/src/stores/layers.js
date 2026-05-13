@@ -4,14 +4,16 @@ import { ref, computed } from 'vue'
 export const LAYER_IDS = ['news', 'flights', 'earthquakes', 'fires', 'weather']
 
 export const useLayersStore = defineStore('layers', () => {
-  const active = ref(new Set())
+  const active = ref(new Set(['news']))
 
   function toggle(id) {
-    if (active.value.has(id)) {
-      active.value.delete(id)
+    const next = new Set(active.value)
+    if (next.has(id)) {
+      next.delete(id)
     } else {
-      active.value.add(id)
+      next.add(id)
     }
+    active.value = next
   }
 
   function isActive(id) {
@@ -19,11 +21,13 @@ export const useLayersStore = defineStore('layers', () => {
   }
 
   function activate(id) {
-    active.value.add(id)
+    active.value = new Set(active.value).add(id)
   }
 
   function deactivate(id) {
-    active.value.delete(id)
+    const next = new Set(active.value)
+    next.delete(id)
+    active.value = next
   }
 
   const activeCount = computed(() => active.value.size)

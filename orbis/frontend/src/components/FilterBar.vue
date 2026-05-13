@@ -1,14 +1,15 @@
 <template>
   <Transition name="fade-down">
-    <div v-if="layersStore.isActive('news')" class="subnav" role="group" :aria-label="t('filter.label')">
+    <div v-if="layersStore.isActive('news')" class="filterbar" role="group" :aria-label="t('filter.label')">
       <button
         v-for="cat in categories"
         :key="cat"
-        class="subnav__item"
-        :class="{ 'subnav__item--active': newsStore.activeFilter === cat }"
-        @click="newsStore.setFilter(cat)"
+        class="filter-btn"
+        :class="{ 'filter-btn--active': newsStore.activeFilter === cat }"
+        @click="setFilter(cat)"
         :aria-pressed="newsStore.activeFilter === cat"
       >
+        <span v-if="newsStore.activeFilter === cat" class="filter-btn__dot" aria-hidden="true"></span>
         {{ t(`filter.${cat}`) }}
       </button>
     </div>
@@ -24,58 +25,50 @@ const { t } = useI18n()
 const newsStore = useNewsStore()
 const layersStore = useLayersStore()
 
-const categories = [
-  'all', 'politics', 'economy', 'technology', 'climate', 'culture', 'infrastructure',
-]
+const categories = ['all', 'politics', 'economy', 'technology', 'climate', 'culture', 'infrastructure']
+
+function setFilter(category) {
+  layersStore.activate('news')
+  newsStore.setFilter(category)
+}
 </script>
 
 <style scoped>
-.subnav {
+.filterbar {
   position: fixed;
-  top: var(--nav-height);
-  left: 50%;
-  transform: translateX(-50%);
-  height: var(--subnav-height);
+  top: calc(var(--nav-height) + 12px);
+  left: 50%; transform: translateX(-50%);
   z-index: var(--z-panel);
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  padding: 0 var(--space-6);
+  display: flex; align-items: center;
+  background: rgba(254, 254, 254, 0.94);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(10px);
+  padding: 0 var(--space-1);
 }
 
-.subnav__item {
-  position: relative;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.filter-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-display);
+  font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-whisper);
-  padding: 6px 0;
-  transition: color var(--t-fast);
+  padding: 9px var(--space-3);
+  border-bottom: 1.5px solid transparent;
+  transition: color var(--t-fast), border-color var(--t-fast);
+  white-space: nowrap;
+}
+.filter-btn:hover { color: var(--ink-mute); }
+.filter-btn--active { color: var(--ink); border-bottom-color: var(--ink); }
+
+.filter-btn__dot {
+  display: inline-block; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--ink); flex-shrink: 0;
 }
 
-.subnav__item:hover { color: var(--ink-mute); }
-
-.subnav__item--active { color: var(--ink); }
-.subnav__item--active::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -2px;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--alert);
-}
-
-.fade-down-enter-active,
-.fade-down-leave-active {
+.fade-down-enter-active, .fade-down-leave-active {
   transition: opacity var(--t-base), transform var(--t-base);
 }
-.fade-down-enter-from,
-.fade-down-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-6px);
+.fade-down-enter-from, .fade-down-leave-to {
+  opacity: 0; transform: translateX(-50%) translateY(-6px);
 }
 </style>
