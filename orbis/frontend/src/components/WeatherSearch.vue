@@ -26,6 +26,12 @@
       <div v-else-if="weatherStore.error" class="wsearch__state">
         {{ t('weather.error') }}
       </div>
+      <div v-else-if="searchLoading" class="wsearch__state">
+        {{ t('weather.searching') }}
+      </div>
+      <div v-else-if="searchError" class="wsearch__state">
+        {{ t('weather.searchError') }}
+      </div>
       <div v-else-if="query && !matches.length" class="wsearch__state">
         {{ t('weather.noMatch') }}
       </div>
@@ -53,7 +59,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLayersStore } from '@/stores/layers.js'
 import { useWeatherStore } from '@/stores/weather.js'
@@ -64,6 +70,10 @@ const { t, locale } = useI18n()
 const layersStore = useLayersStore()
 const weatherStore = useWeatherStore()
 const query = ref('')
+const remoteResults = ref([])
+const searchLoading = ref(false)
+const searchError = ref(null)
+let searchToken = 0
 
 const pins = computed(() => weatherStore.pins)
 
@@ -79,7 +89,7 @@ const matches = computed(() => {
   const q = normalize(query.value)
   if (!q) return pins.value.slice().sort(sortByCity)
 
-  return pins.value
+  const localMatches = pins.value
     .filter(pin => {
       const country = countryName(pin.country)
       return [
@@ -90,6 +100,13 @@ const matches = computed(() => {
       ].some(value => normalize(value).includes(q))
     })
     .sort(sortByCity)
+
+  const localIds = new Set(localMatches.map(pin => pin.city_id))
+  const remoteMatches = remoteResults.value
+    .filter(pin => !localIds.has(pin.city_id))
+    .sort(sortByCity)
+
+  return [...localMatches, ...remoteMatches]
 })
 
 const visibleMatches = computed(() => matches.value.slice(0, query.value ? 8 : 4))
@@ -99,9 +116,42 @@ function selectFirst() {
 }
 
 function selectPin(pin) {
+  weatherStore.upsertPin(pin)
   weatherStore.selectPin(pin)
   emit('select', pin)
 }
+
+watch(query, (value) => {
+  const q = value.trim()
+  const token = ++searchToken
+  searchError.value = null
+  remoteResults.value = []
+  if (q.length < 2) {
+    searchLoading.value = false
+    return
+  }
+
+  searchLoading.value = true
+  window.setTimeout(async () => {
+    if (token !== searchToken) return
+    try {
+      const params = new URLSearchParams({
+        q,
+        limit: '8',
+        language: locale.value.slice(0, 2),
+      })
+      const res = await fetch(`/api/weather/search?${params}`)
+      if (!res.ok) throw new Error(`Weather search ${res.status}`)
+      const data = await res.json()
+      if (token === searchToken) remoteResults.value = Array.isArray(data) ? data : []
+    } catch (error) {
+      if (token === searchToken) searchError.value = error
+      console.error('[weather-search]', error)
+    } finally {
+      if (token === searchToken) searchLoading.value = false
+    }
+  }, 220)
+})
 
 function countryName(code) {
   return displayNames.value?.of(code) || code

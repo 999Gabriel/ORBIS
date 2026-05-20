@@ -56,6 +56,8 @@ export default {
     searchLabel: 'Wetter suchen',
     searchScope: 'Ort',
     searchPlaceholder: 'Stadt oder Land',
+    searching: 'Suche läuft.',
+    searchError: 'Suche gerade nicht erreichbar.',
     noMatch: 'Kein Ort gefunden.',
   },
   cluster: {

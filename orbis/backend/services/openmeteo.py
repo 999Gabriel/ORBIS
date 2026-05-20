@@ -9,6 +9,7 @@ import time
 import httpx
 
 OPEN_METEO_FORECAST = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_GEOCODING = "https://geocoding-api.open-meteo.com/v1/search"
 
 # Stable city ids preserve the existing weather_cache primary keys.
 CITIES = [
@@ -114,14 +115,45 @@ def _value_or(value, fallback):
     return fallback if value is None else value
 
 
+def _pin_from_current(location: dict, current: dict, now: int) -> dict | None:
+    temp = current.get("temperature_2m")
+    if temp is None:
+        return None
+
+    condition_id, condition, icon = _weather_details(
+        int(current.get("weather_code") or 0),
+        bool(current.get("is_day", 1)),
+    )
+    return {
+        "city_id": location["city_id"],
+        "city": location["city"],
+        "country": location["country"],
+        "lat": location["lat"],
+        "lon": location["lon"],
+        "temp": temp,
+        "feels_like": _value_or(current.get("apparent_temperature"), temp),
+        "humidity": _value_or(current.get("relative_humidity_2m"), 0),
+        "condition_id": condition_id,
+        "condition": condition,
+        "icon": icon,
+        "wind_speed": _value_or(current.get("wind_speed_10m"), 0.0),
+        "wind_deg": _value_or(current.get("wind_direction_10m"), 0),
+        "fetched_at": now,
+    }
+
+
 async def fetch_weather() -> list[dict]:
+    return await fetch_weather_for_locations(CITIES)
+
+
+async def fetch_weather_for_locations(locations: list[dict]) -> list[dict]:
     results: list[dict] = []
     batch_size = 20
     now = int(time.time())
 
     async with httpx.AsyncClient(timeout=20) as client:
-        for i in range(0, len(CITIES), batch_size):
-            batch = CITIES[i : i + batch_size]
+        for i in range(0, len(locations), batch_size):
+            batch = locations[i : i + batch_size]
             try:
                 resp = await client.get(
                     OPEN_METEO_FORECAST,
@@ -153,32 +185,54 @@ async def fetch_weather() -> list[dict]:
             entries = data if isinstance(data, list) else [data]
             for city, entry in zip(batch, entries):
                 current = entry.get("current") or {}
-                temp = current.get("temperature_2m")
-                if temp is None:
-                    continue
-
-                condition_id, condition, icon = _weather_details(
-                    int(current.get("weather_code") or 0),
-                    bool(current.get("is_day", 1)),
-                )
-                results.append(
-                    {
-                        "city_id": city["city_id"],
-                        "city": city["city"],
-                        "country": city["country"],
-                        "lat": city["lat"],
-                        "lon": city["lon"],
-                        "temp": temp,
-                        "feels_like": _value_or(current.get("apparent_temperature"), temp),
-                        "humidity": _value_or(current.get("relative_humidity_2m"), 0),
-                        "condition_id": condition_id,
-                        "condition": condition,
-                        "icon": icon,
-                        "wind_speed": _value_or(current.get("wind_speed_10m"), 0.0),
-                        "wind_deg": _value_or(current.get("wind_direction_10m"), 0),
-                        "fetched_at": now,
-                    }
-                )
+                pin = _pin_from_current(city, current, now)
+                if pin:
+                    results.append(pin)
 
     print(f"[openmeteo] fetched {len(results)} cities")
     return results
+
+
+async def search_weather(query: str, limit: int = 8, language: str = "en") -> list[dict]:
+    query = query.strip()
+    if len(query) < 2:
+        return []
+
+    async with httpx.AsyncClient(timeout=20) as client:
+        try:
+            resp = await client.get(
+                OPEN_METEO_GEOCODING,
+                params={
+                    "name": query,
+                    "count": limit,
+                    "language": language,
+                    "format": "json",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as exc:
+            print(f"[openmeteo] search '{query[:40]}' failed: {exc}")
+            return []
+
+    locations = []
+    seen: set[int] = set()
+    for item in data.get("results") or []:
+        geo_id = item.get("id")
+        lat = item.get("latitude")
+        lon = item.get("longitude")
+        name = item.get("name")
+        if geo_id is None or lat is None or lon is None or not name or geo_id in seen:
+            continue
+        seen.add(geo_id)
+
+        locations.append({
+            # Keep dynamic ids away from the legacy OpenWeather city-id range.
+            "city_id": -int(geo_id),
+            "city": name,
+            "country": item.get("country_code") or item.get("country") or "",
+            "lat": float(lat),
+            "lon": float(lon),
+        })
+
+    return await fetch_weather_for_locations(locations)

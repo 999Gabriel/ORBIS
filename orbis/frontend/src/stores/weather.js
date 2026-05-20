@@ -24,8 +24,17 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  function upsertPin(pin) {
+    const index = pins.value.findIndex(p => p.city_id === pin.city_id)
+    if (index >= 0) {
+      pins.value[index] = pin
+    } else {
+      pins.value = [...pins.value, pin]
+    }
+  }
+
   function selectPin(pin) { selected.value = pin }
   function clearPin()     { selected.value = null }
 
-  return { pins, selected, loading, loadedOnce, error, fetchWeather, selectPin, clearPin }
+  return { pins, selected, loading, loadedOnce, error, fetchWeather, upsertPin, selectPin, clearPin }
 })
