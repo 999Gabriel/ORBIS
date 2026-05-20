@@ -84,7 +84,7 @@ function toggleLayer(id)    { layersStore.toggle(id) }
 
 .navbar__logo {
   display: block;
-  height: 40px;
+  height: 52px;
   width: auto;
   object-fit: contain;
 }

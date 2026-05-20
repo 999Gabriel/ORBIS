@@ -49,6 +49,15 @@ export default {
   globe: {
     hint: 'Activate a layer to explore world events.',
   },
+  weather: {
+    loading: 'Loading weather data.',
+    empty:   'No weather data cached yet.',
+    error:   'Weather data is unavailable right now.',
+    searchLabel: 'Weather search',
+    searchScope: 'Place',
+    searchPlaceholder: 'City or country',
+    noMatch: 'No place found.',
+  },
   cluster: {
     aria:     'Articles at this location',
     articles: 'articles at this location',

@@ -15,6 +15,31 @@ CONCURRENCY = 4
 USE_CLAUDE = bool(os.environ.get("ANTHROPIC_API_KEY", "").startswith("sk-"))
 _pipeline_lock = asyncio.Lock()  # prevent concurrent pipeline runs
 
+_NEGATIVE_WORDS = {
+    'war', 'crisis', 'attack', 'killed', 'dead', 'death', 'flood', 'fire',
+    'disaster', 'collapse', 'crash', 'conflict', 'violence', 'shooting',
+    'explosion', 'tension', 'shortage', 'famine', 'earthquake', 'hurricane',
+    'drought', 'storm', 'strike', 'threat', 'sanction', 'recession',
+    'inflation', 'deficit', 'poverty', 'arrested', 'protest', 'bomb',
+}
+_POSITIVE_WORDS = {
+    'growth', 'record', 'breakthrough', 'innovation', 'launch', 'success',
+    'agreement', 'peace', 'invest', 'fund', 'boost', 'improved', 'advance',
+    'wins', 'progress', 'recovery', 'expand', 'summit', 'partnership',
+    'renewable', 'clean', 'green', 'soars', 'profits', 'historic',
+    'relief', 'rescue', 'discovery', 'approved', 'signed', 'celebrates',
+}
+
+def _detect_sentiment(title: str) -> str:
+    lower = title.lower()
+    neg = sum(1 for w in _NEGATIVE_WORDS if w in lower)
+    pos = sum(1 for w in _POSITIVE_WORDS if w in lower)
+    if neg > pos:
+        return "negative"
+    if pos > neg:
+        return "positive"
+    return "neutral"
+
 # Build a title-keyword → geo lookup from known countries
 _TITLE_KEYWORDS: list[tuple[str, tuple]] = []
 for _code, _geo in COUNTRY_GEO.items():
@@ -69,7 +94,7 @@ def _enrich_fallback(art: dict) -> dict | None:
         "city": city,
         "lat": lat,
         "lon": lon,
-        "sentiment": "neutral",
+        "sentiment": _detect_sentiment(art["title"]),
         "category": art.get("gdelt_category", "politics"),
         "summary": [
             art["title"],

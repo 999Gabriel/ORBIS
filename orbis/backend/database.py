@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS news (
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(CREATE_TABLE)
+        await db.execute(CREATE_WEATHER_TABLE)
         await db.commit()
 
 
@@ -70,3 +71,49 @@ async def count_news() -> int:
         async with db.execute("SELECT COUNT(*) FROM news") as cur:
             row = await cur.fetchone()
             return row[0] if row else 0
+
+
+# ── Weather cache ─────────────────────────────────────────────────────────────
+
+CREATE_WEATHER_TABLE = """
+CREATE TABLE IF NOT EXISTS weather_cache (
+    city_id      INTEGER PRIMARY KEY,
+    city         TEXT    NOT NULL,
+    country      TEXT,
+    lat          REAL,
+    lon          REAL,
+    temp         REAL,
+    feels_like   REAL,
+    humidity     INTEGER,
+    condition_id INTEGER,
+    condition    TEXT,
+    icon         TEXT,
+    wind_speed   REAL,
+    wind_deg     INTEGER,
+    fetched_at   INTEGER NOT NULL
+)
+"""
+
+
+async def upsert_weather(pins: list[dict]) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.executemany(
+            """
+            INSERT OR REPLACE INTO weather_cache
+                (city_id, city, country, lat, lon, temp, feels_like, humidity,
+                 condition_id, condition, icon, wind_speed, wind_deg, fetched_at)
+            VALUES
+                (:city_id, :city, :country, :lat, :lon, :temp, :feels_like, :humidity,
+                 :condition_id, :condition, :icon, :wind_speed, :wind_deg, :fetched_at)
+            """,
+            pins,
+        )
+        await db.commit()
+
+
+async def get_weather() -> list[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute("SELECT * FROM weather_cache ORDER BY city") as cur:
+            rows = await cur.fetchall()
+    return [dict(r) for r in rows]

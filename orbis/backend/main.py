@@ -9,20 +9,30 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-from database import init_db
+from database import init_db, upsert_weather
 from pipeline import run_pipeline
 from routers.news import router as news_router
+from routers.weather import router as weather_router
+from services.openmeteo import fetch_weather
 
 scheduler = AsyncIOScheduler()
+
+
+async def refresh_weather():
+    pins = await fetch_weather()
+    if pins:
+        await upsert_weather(pins)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    # Run initial pipeline in background so server starts immediately
+    # News pipeline — run immediately, then every 15 min
     asyncio.create_task(run_pipeline())
-    # Refresh every 15 minutes
     scheduler.add_job(run_pipeline, "interval", minutes=15)
+    # Weather cache via Open-Meteo - run immediately, then every 30 min
+    asyncio.create_task(refresh_weather())
+    scheduler.add_job(refresh_weather, "interval", minutes=30)
     scheduler.start()
     yield
     scheduler.shutdown(wait=False)
@@ -38,6 +48,7 @@ app.add_middleware(
 )
 
 app.include_router(news_router)
+app.include_router(weather_router)
 
 
 @app.get("/health")

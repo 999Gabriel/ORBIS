@@ -49,6 +49,15 @@ export default {
   globe: {
     hint: 'Aktiviere eine Ebene, um Weltereignisse zu erkunden.',
   },
+  weather: {
+    loading: 'Wetterdaten werden geladen.',
+    empty:   'Noch keine Wetterdaten im Cache.',
+    error:   'Wetterdaten gerade nicht erreichbar.',
+    searchLabel: 'Wetter suchen',
+    searchScope: 'Ort',
+    searchPlaceholder: 'Stadt oder Land',
+    noMatch: 'Kein Ort gefunden.',
+  },
   cluster: {
     aria:     'Artikel an diesem Ort',
     articles: 'Artikel an diesem Ort',
