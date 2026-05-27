@@ -61,18 +61,32 @@ export function useGlobe() {
         containerEl.style.cursor = pin ? 'pointer' : 'grab'
         onPinHover?.(pin)
       })
-      // ── Weather points ───────────────────────────────────────────────────
-      .pointsData([])
-      .pointLat('lat')
-      .pointLng('lon')
-      .pointAltitude(d => d._selected ? 0.045 : 0.028)
-      .pointRadius(d => d._selected ? 1.05 : 0.68)
-      .pointResolution(16)
-      .pointColor(d => d._selected ? '#0A0A0B' : _weatherColor(d.condition_id))
-      .onPointClick(pt => onWeatherClick?.(pt))
-      .onPointHover(pt => {
-        containerEl.style.cursor = pt ? 'pointer' : 'grab'
+      // ── Weather heatmap (temperature gradient) ───────────────────────────
+      .heatmapsData([])
+      .heatmapPointLat('lat')
+      .heatmapPointLng('lon')
+      .heatmapPointWeight('weight')
+      .heatmapBandwidth(10)
+      .heatmapColorFn(() => t => _tempGradient(t))
+      .heatmapColorSaturation(2.5)
+      .heatmapBaseAltitude(0.005)
+      // ── Weather city labels (name + temperature) ──────────────────────────
+      .labelsData([])
+      .labelLat('lat')
+      .labelLng('lon')
+      .labelText(d => `${Math.round(d.temp)}°  ${d.city}`)
+      .labelColor(d => d._selected ? '#F3C843' : 'rgba(255,255,255,0.88)')
+      .labelSize(0.55)
+      .labelDotRadius(d => d._selected ? 0.55 : 0.38)
+      .labelDotOrientation(() => 'right')
+      .labelResolution(3)
+      .labelAltitude(0.005)
+      .onLabelClick(lbl => onWeatherClick?.(lbl))
+      .onLabelHover(lbl => {
+        containerEl.style.cursor = lbl ? 'pointer' : 'grab'
       })
+      // ── Points layer (kept empty; reserved for future use) ───────────────
+      .pointsData([])
       // ── Pulsing rings (globe.gl built-in animated layer) ─────────────────
       .ringsData([])
       .ringLat('lat')
@@ -117,11 +131,25 @@ export function useGlobe() {
     globeInstance.value.ringsData(singlePins)
   }
 
-  function updateWeather(pins, selectedPin = null) {
+  function updateWeatherMap(pins, selectedPin = null) {
     if (!globeInstance.value) return
+    if (!pins.length) {
+      globeInstance.value.heatmapsData([]).labelsData([])
+      return
+    }
     const selectedId = selectedPin?.city_id ?? null
-    const tagged = pins.map(pin => ({ ...pin, _selected: pin.city_id === selectedId }))
-    globeInstance.value.pointsData(tagged)
+    const temps = pins.map(p => p.temp).filter(t => t != null)
+    const minT  = Math.min(...temps)
+    const maxT  = Math.max(...temps)
+    const range = maxT - minT || 1
+    const tagged = pins.map(p => ({
+      ...p,
+      weight:    Math.max(0, Math.min(1, (p.temp - minT) / range)),
+      _selected: p.city_id === selectedId,
+    }))
+    globeInstance.value
+      .heatmapsData([tagged])
+      .labelsData(tagged)
   }
 
   function flyTo(lat, lon, altitude = 1.8, duration = 900) {
@@ -140,7 +168,7 @@ export function useGlobe() {
     isReady.value = false
   }
 
-  return { globeInstance, isReady, init, updatePoints, updateRings, updateWeather, flyTo, resize, destroy }
+  return { globeInstance, isReady, init, updatePoints, updateRings, updateWeatherMap, flyTo, resize, destroy }
 }
 
 // ── Geometry cache ────────────────────────────────────────────────────────────
@@ -219,17 +247,28 @@ function createPinObject(THREE, pin) {
   return group
 }
 
-// ── Weather condition → colour ────────────────────────────────────────────────
-function _weatherColor(id) {
-  if (!id) return '#BEBDB4'
-  if (id >= 200 && id < 300) return '#7B61C4'  // thunderstorm — purple
-  if (id >= 300 && id < 400) return '#9BB3D4'  // drizzle — light blue
-  if (id >= 500 && id < 600) return '#6B89C4'  // rain — blue
-  if (id >= 600 && id < 700) return '#B8D8F0'  // snow — pale blue
-  if (id >= 700 && id < 800) return '#A8A890'  // atmosphere (fog/haze) — grey-green
-  if (id === 800)             return '#F3C843'  // clear — amber/sun
-  if (id > 800)               return '#BEBDB4'  // clouds — grey
-  return '#BEBDB4'
+// ── Temperature → colour gradient (cold → hot) ───────────────────────────────
+function _tempGradient(t) {
+  const stops = [
+    [0.00, [26,  68, 194]],
+    [0.20, [ 0, 184, 212]],
+    [0.40, [76, 175,  80]],
+    [0.58, [243, 200,  67]],
+    [0.78, [255, 140,   0]],
+    [1.00, [230,  48,  48]],
+  ]
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const [t0, c0] = stops[i - 1]
+      const [t1, c1] = stops[i]
+      const f = (t - t0) / (t1 - t0)
+      const r = Math.round(c0[0] + f * (c1[0] - c0[0]))
+      const g = Math.round(c0[1] + f * (c1[1] - c0[1]))
+      const b = Math.round(c0[2] + f * (c1[2] - c0[2]))
+      return `rgba(${r},${g},${b},0.72)`
+    }
+  }
+  return 'rgba(230,48,48,0.72)'
 }
 
 // ── Dot-earth texture ─────────────────────────────────────────────────────────

@@ -47,7 +47,7 @@ import { useWeatherStore } from '@/stores/weather.js'
 
 const { t } = useI18n()
 const containerRef = ref(null)
-const { init, updatePoints, updateRings, updateWeather, flyTo, resize, destroy } = useGlobe()
+const { init, updatePoints, updateRings, updateWeatherMap, flyTo, resize, destroy } = useGlobe()
 const newsStore    = useNewsStore()
 const layersStore  = useLayersStore()
 const weatherStore = useWeatherStore()
@@ -163,9 +163,9 @@ watch(() => layersStore.isActive('news'), (active) => {
 async function syncWeatherLayer(active) {
   if (active) {
     if (!weatherStore.pins.length) await weatherStore.fetchWeather()
-    updateWeather(weatherStore.pins, weatherStore.selected)
+    updateWeatherMap(weatherStore.pins, weatherStore.selected)
   } else {
-    updateWeather([], null)
+    updateWeatherMap([], null)
     weatherStore.clearPin()
   }
 }
@@ -173,11 +173,11 @@ async function syncWeatherLayer(active) {
 // Weather layer — fetch on first activation, clear when deactivated
 watch(() => layersStore.isActive('weather'), syncWeatherLayer)
 watch(() => weatherStore.pins, (pins) => {
-  if (layersStore.isActive('weather')) updateWeather(pins, weatherStore.selected)
+  if (layersStore.isActive('weather')) updateWeatherMap(pins, weatherStore.selected)
 })
 watch(() => weatherStore.selected, (pin) => {
   if (!layersStore.isActive('weather')) return
-  updateWeather(weatherStore.pins, pin)
+  updateWeatherMap(weatherStore.pins, pin)
   if (pin) flyTo(pin.lat, pin.lon, 1.35, 900)
 })
 watch(() => newsStore.filteredPins, (pins) => {
