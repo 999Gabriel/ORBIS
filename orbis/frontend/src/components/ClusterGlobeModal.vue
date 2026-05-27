@@ -18,8 +18,8 @@
       </button>
     </header>
 
-    <!-- ── Mini globe — identical style to main globe, zoomed into cluster ── -->
-    <div class="cpanel__globe-wrap">
+    <!-- ── Mini globe — only shown for small clusters where pins are still distinguishable ── -->
+    <div v-if="cluster._count <= 12" class="cpanel__globe-wrap">
       <div ref="miniRef" class="cpanel__globe"></div>
     </div>
 
@@ -40,6 +40,7 @@
         <div class="cpanel__text">
           <span class="cpanel__title">{{ pin.title }}</span>
           <span class="cpanel__meta">
+            <span v-if="pin.category" class="cpanel__cat">{{ pin.category }}</span>
             <span v-if="pin.city && pin.city !== 'Unknown'">{{ pin.city }}, </span>{{ pin.country }}
           </span>
         </div>
@@ -111,6 +112,8 @@ function createMiniPin(THREE, pin) {
 
 // ── Mini globe init ───────────────────────────────────────────────────────────
 onMounted(async () => {
+  if (props.cluster._count > 12) return  // too many pins — list-only mode
+
   const [{ default: Globe }, THREE] = await Promise.all([
     import('globe.gl'),
     import('three'),
@@ -328,10 +331,11 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--line);
   cursor: pointer;
   transition: background var(--t-fast);
+  min-height: 52px;
 }
 .cpanel__item:hover { background: rgba(232, 90, 79, 0.04); }
 .cpanel__item:focus-visible { outline: 2px solid #E85A4F; outline-offset: -2px; }
@@ -347,9 +351,9 @@ onUnmounted(() => {
 }
 
 .cpanel__title {
-  font-size: 12px; line-height: 1.55; color: var(--ink);
+  font-size: 12px; line-height: 1.5; color: var(--ink);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -358,7 +362,14 @@ onUnmounted(() => {
   font-family: var(--font-display);
   font-size: 8.5px; letter-spacing: 0.09em;
   color: var(--ink-whisper); text-transform: uppercase;
+  display: flex; align-items: center; gap: var(--space-2);
 }
+
+.cpanel__cat {
+  color: var(--navy);
+  opacity: 0.8;
+}
+.cpanel__cat::after { content: '·'; margin-left: var(--space-2); color: var(--ink-whisper); }
 
 .cpanel__arrow {
   font-size: 14px; color: var(--ink-whisper);
