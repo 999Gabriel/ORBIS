@@ -27,6 +27,7 @@ async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(CREATE_TABLE)
         await db.execute(CREATE_WEATHER_TABLE)
+        await db.execute(CREATE_OIL_TABLE)
         await db.commit()
 
 
@@ -117,3 +118,41 @@ async def get_weather() -> list[dict]:
         async with db.execute("SELECT * FROM weather_cache ORDER BY city") as cur:
             rows = await cur.fetchall()
     return [dict(r) for r in rows]
+
+
+# ── Oil price cache ───────────────────────────────────────────────────────────
+
+CREATE_OIL_TABLE = """
+CREATE TABLE IF NOT EXISTS oil_cache (
+    id         INTEGER PRIMARY KEY,
+    data       TEXT    NOT NULL,
+    fetched_at INTEGER NOT NULL
+)
+"""
+
+OIL_TTL_SECONDS = 4 * 3600  # refresh at most every 4 hours
+
+
+async def upsert_oil_prices(payload: dict) -> None:
+    import time as _time
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("DELETE FROM oil_cache")
+        await db.execute(
+            "INSERT INTO oil_cache (data, fetched_at) VALUES (?, ?)",
+            (json.dumps(payload), int(_time.time())),
+        )
+        await db.commit()
+
+
+async def get_oil_prices() -> dict | None:
+    """Return cached oil prices if they are fresh, otherwise None."""
+    import time as _time
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute("SELECT data, fetched_at FROM oil_cache LIMIT 1") as cur:
+            row = await cur.fetchone()
+    if not row:
+        return None
+    if _time.time() - row["fetched_at"] > OIL_TTL_SECONDS:
+        return None
+    return json.loads(row["data"])

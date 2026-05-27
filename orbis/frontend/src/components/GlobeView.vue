@@ -44,6 +44,7 @@ import ClusterGlobeModal from '@/components/ClusterGlobeModal.vue'
 import WeatherSearch from '@/components/WeatherSearch.vue'
 import WeatherPanel from '@/components/WeatherPanel.vue'
 import { useWeatherStore } from '@/stores/weather.js'
+import { useOilStore, OIL_COUNTRIES } from '@/stores/oil.js'
 
 const { t } = useI18n()
 const containerRef = ref(null)
@@ -51,6 +52,7 @@ const { init, updatePoints, updateRings, updateWeatherMap, flyTo, resize, destro
 const newsStore    = useNewsStore()
 const layersStore  = useLayersStore()
 const weatherStore = useWeatherStore()
+const oilStore     = useOilStore()
 
 const activeCluster = ref(null)
 
@@ -116,6 +118,10 @@ function clusterPoints(pins, selectedPin = null) {
 }
 
 function handlePinClick(pin) {
+  if (pin._type === 'oil') {
+    oilStore.selectCountry(pin)
+    return
+  }
   if (pin._cluster) {
     newsStore.clearPin()
     activeCluster.value = pin
@@ -148,7 +154,12 @@ function refreshPoints() {
   const showPins  = layersStore.isActive('news')
   const rawPins   = showPins ? newsStore.filteredPins : []
   const clustered = clusterPoints(rawPins, newsStore.selectedPin)
-  updatePoints(clustered, newsStore.selectedPin)
+
+  const oilMarkers = layersStore.isActive('oil')
+    ? OIL_COUNTRIES.map(c => ({ ...c, _type: 'oil', _selected: c.id === oilStore.selected?.id }))
+    : []
+
+  updatePoints([...clustered, ...oilMarkers], newsStore.selectedPin)
   updateRings(clustered.filter(p => !p._cluster))
 }
 
@@ -159,6 +170,14 @@ watch(() => layersStore.isActive('news'), (active) => {
   }
   refreshPoints()
 })
+
+watch(() => layersStore.isActive('oil'), async (active) => {
+  if (active) await oilStore.fetchPrices()
+  else oilStore.clearCountry()
+  refreshPoints()
+})
+
+watch(() => oilStore.selected, () => refreshPoints())
 
 async function syncWeatherLayer(active) {
   if (active) {

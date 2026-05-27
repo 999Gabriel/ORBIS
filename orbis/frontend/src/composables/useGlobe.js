@@ -11,10 +11,9 @@ export const SENTIMENT_COLORS = {
   negative: '#B83232',
 }
 
-// All single news pins are red
 const PIN_COLOR     = '#E85A4F'
-// Cluster bars are amber — visually distinct from single pins
 const CLUSTER_COLOR = '#F3C843'
+const OIL_COLOR     = '#F3C843'
 
 export function useGlobe() {
   const globeInstance = shallowRef(null)
@@ -201,9 +200,26 @@ function _getMat(THREE, color, emissiveIntensity = 0.25) {
   return _matCache.get(key)
 }
 
-// ── Pin / cluster builder ─────────────────────────────────────────────────────
+// ── Pin / cluster / oil marker builder ───────────────────────────────────────
 function createPinObject(THREE, pin) {
   const group = new THREE.Group()
+
+  if (pin._type === 'oil') {
+    const sel = pin._selected
+    const r   = sel ? 5.0 : 3.8
+    const h   = 1.6
+    const disc = new THREE.CylinderGeometry(r, r * 1.05, h, 16)
+    disc.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+    disc.translate(0, 0, h / 2)
+    group.add(new THREE.Mesh(disc, _getMat(THREE, OIL_COLOR, sel ? 0.75 : 0.45)))
+    if (sel) {
+      const ring = new THREE.RingGeometry(r + 1.5, r + 3.0, 32)
+      group.add(new THREE.Mesh(ring, new THREE.MeshBasicMaterial({
+        color: OIL_COLOR, side: THREE.DoubleSide, transparent: true, opacity: 0.55,
+      })))
+    }
+    return group
+  }
 
   if (pin._cluster) {
     const n      = Math.min(pin._count, 20)

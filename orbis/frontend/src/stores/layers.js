@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-export const LAYER_IDS = ['news', 'flights', 'earthquakes', 'fires', 'weather']
+export const LAYER_IDS = ['news', 'flights', 'oil', 'weather']
 
 export const useLayersStore = defineStore('layers', () => {
   const active = ref(new Set(['news']))

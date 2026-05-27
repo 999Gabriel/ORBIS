@@ -56,11 +56,10 @@ const layersStore = useLayersStore()
 const newsStore = useNewsStore()
 
 const layers = [
-  { id: 'news',        code: '01' },
-  { id: 'flights',     code: '02' },
-  { id: 'earthquakes', code: '03' },
-  { id: 'fires',       code: '04' },
-  { id: 'weather',     code: '05' },
+  { id: 'news',    code: '01' },
+  { id: 'flights', code: '02' },
+  { id: 'oil',     code: '03' },
+  { id: 'weather', code: '04' },
 ]
 
 function switchLocale(lang) { setLocale(lang) }
