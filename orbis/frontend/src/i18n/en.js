@@ -6,7 +6,6 @@ export default {
   layers: {
     title: 'Layers',
     news:    'News',
-    flights: 'Flights',
     oil:     'Oil',
     weather: 'Weather',
   },

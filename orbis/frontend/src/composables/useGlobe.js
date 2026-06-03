@@ -1,5 +1,13 @@
 import { shallowRef, ref } from 'vue'
 import earthDayUrl from '@/assets/globe/earth-day.jpg'
+import countries from '@/assets/geo/countries-110m.json'
+
+// Accurate country outlines (Natural Earth 110m, slimmed). Rendered as a
+// globe.gl polygon layer with transparent caps so the dotted earth shows
+// through — only the borders are drawn, sitting just above the surface.
+const COUNTRY_FEATURES = countries.features
+const BORDER_COLOR = 'rgba(255,255,255,0.26)'
+const BORDER_TRANSPARENT = 'rgba(0,0,0,0)'
 
 let cachedLightMap = null
 const _geomCache = new Map()
@@ -45,6 +53,12 @@ export function useGlobe() {
       .atmosphereAltitude(0.08)
       .width(w)
       .height(h)
+      // ── Country borders (vector outlines over the dotted earth) ──────────
+      .polygonsData(COUNTRY_FEATURES)
+      .polygonCapColor(() => BORDER_TRANSPARENT)
+      .polygonSideColor(() => BORDER_TRANSPARENT)
+      .polygonStrokeColor(() => BORDER_COLOR)
+      .polygonAltitude(0.004)
       // ── Objects (3-D bars) ───────────────────────────────────────────────
       .objectsData([])
       .objectLat('lat')

@@ -6,7 +6,6 @@ export default {
   layers: {
     title: 'Ebenen',
     news:    'Nachrichten',
-    flights: 'Flugverkehr',
     oil:     'Öl',
     weather: 'Wetter',
   },

@@ -39,7 +39,13 @@
       @click="toggleLayer(layer.id)"
       :aria-pressed="layersStore.isActive(layer.id)"
     >
-      <span class="layer-tile__code">{{ layer.code }}</span>
+      <!-- Status indicator is a STRUCTURAL swap (v-if), not a colour
+           transition — this forces a reflow so the active state always
+           paints, even inside the backdrop-filter container. -->
+      <span class="layer-tile__status" aria-hidden="true">
+        <span v-if="layersStore.isActive(layer.id)" class="layer-tile__dot layer-tile__dot--on"></span>
+        <span v-else class="layer-tile__dot layer-tile__dot--off"></span>
+      </span>
       <span class="layer-tile__name">{{ t(`layers.${layer.id}`) }}</span>
     </button>
   </div>
@@ -56,10 +62,9 @@ const layersStore = useLayersStore()
 const newsStore = useNewsStore()
 
 const layers = [
-  { id: 'news',    code: '01' },
-  { id: 'flights', code: '02' },
-  { id: 'oil',     code: '03' },
-  { id: 'weather', code: '04' },
+  { id: 'news' },
+  { id: 'oil' },
+  { id: 'weather' },
 ]
 
 function switchLocale(lang) { setLocale(lang) }
@@ -148,38 +153,54 @@ function toggleLayer(id)    { layersStore.toggle(id) }
 }
 
 .layer-tile {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 3px;
-  min-width: 68px;
+  display: flex; flex-direction: row;
+  align-items: center; justify-content: flex-start;
+  gap: var(--space-2);
+  min-width: 96px;
   height: 50px;
-  padding: var(--space-2) var(--space-3);
+  padding: 0 var(--space-4);
   border-right: 1px solid var(--line);
-  transition: background var(--t-fast);
   white-space: nowrap;
 }
 .layer-tile:last-child { border-right: none; }
 .layer-tile:hover:not(.layer-tile--active) { background: var(--surface-hover); }
 
-/* Active: black tile, white text — clear inversion */
-.layer-tile--active { background: #0A0A0B; }
-.layer-tile--active .layer-tile__code { color: rgba(255,255,255,0.40); }
+/* Active: black tile, white text — clear inversion.
+   translateZ promotes the tile to its own compositing layer so the
+   opaque fill paints independently of the backdrop-filter parent. */
+.layer-tile--active {
+  background: #0A0A0B;
+  transform: translateZ(0);
+}
 .layer-tile--active .layer-tile__name { color: #FFFFFF; }
 
-.layer-tile__code {
-  font-family: var(--font-display);
-  font-size: 7px; letter-spacing: 0.10em;
-  color: var(--ink-whisper);
-  transition: color var(--t-fast);
+/* ── Status dot — structural on/off indicator ── */
+.layer-tile__status {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 10px; height: 10px;
+  flex-shrink: 0;
 }
+.layer-tile__dot { border-radius: var(--radius-pill); }
+.layer-tile__dot--off {
+  width: 7px; height: 7px;
+  border: 1.5px solid var(--ink-whisper);
+}
+.layer-tile__dot--on {
+  width: 9px; height: 9px;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+.layer-tile:hover:not(.layer-tile--active) .layer-tile__dot--off {
+  border-color: var(--ink-mute);
+}
+
 .layer-tile__name {
   font-family: var(--font-display);
-  font-size: 7.5px; letter-spacing: 0.08em;
+  font-size: 8px; letter-spacing: 0.10em;
   text-transform: uppercase;
-  color: var(--ink-whisper);
-  text-align: center; line-height: 1.2;
-  transition: color var(--t-fast);
+  color: var(--ink-mute);
+  line-height: 1.2;
 }
-.layer-tile:hover:not(.layer-tile--active) .layer-tile__code,
-.layer-tile:hover:not(.layer-tile--active) .layer-tile__name { color: var(--ink-mute); }
+.layer-tile:hover:not(.layer-tile--active) .layer-tile__name { color: var(--ink); }
 </style>
