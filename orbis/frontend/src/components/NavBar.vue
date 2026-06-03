@@ -32,21 +32,19 @@
   <!-- Layer dock: bottom-left, above timeline -->
   <div class="layer-dock" role="group" :aria-label="t('layers.title')">
     <button
-      v-for="layer in layers"
+      v-for="(layer, i) in layers"
       :key="layer.id"
-      class="layer-tile"
-      :class="{ 'layer-tile--active': layersStore.isActive(layer.id) }"
+      class="layer-btn"
+      :class="{ 'layer-btn--active': layersStore.isActive(layer.id) }"
       @click="toggleLayer(layer.id)"
       :aria-pressed="layersStore.isActive(layer.id)"
     >
-      <!-- Status indicator is a STRUCTURAL swap (v-if), not a colour
-           transition — this forces a reflow so the active state always
-           paints, even inside the backdrop-filter container. -->
-      <span class="layer-tile__status" aria-hidden="true">
-        <span v-if="layersStore.isActive(layer.id)" class="layer-tile__dot layer-tile__dot--on"></span>
-        <span v-else class="layer-tile__dot layer-tile__dot--off"></span>
+      <!-- structural swap so the indicator always repaints -->
+      <span class="layer-btn__mark" aria-hidden="true">
+        <span v-if="layersStore.isActive(layer.id)" class="layer-btn__mark--on">—</span>
+        <span v-else class="layer-btn__mark--off">{{ String(i + 1).padStart(2, '0') }}</span>
       </span>
-      <span class="layer-tile__name">{{ t(`layers.${layer.id}`) }}</span>
+      <span class="layer-btn__name">{{ t(`layers.${layer.id}`) }}</span>
     </button>
   </div>
 </template>
@@ -137,70 +135,58 @@ function toggleLayer(id)    { layersStore.toggle(id) }
   font-family: var(--font-display);
 }
 
-/* ── Layer dock — bottom-left ── */
+/* ── Layer dock — bottom-left typographic stack ── */
 .layer-dock {
   position: fixed;
   bottom: calc(var(--timeline-height) + var(--space-5));
   left: var(--space-8);
   z-index: var(--z-panel);
   display: flex;
-  align-items: stretch;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-xs);
-  overflow: hidden;
-  background: rgba(254, 254, 254, 0.94);
-  backdrop-filter: blur(12px);
+  flex-direction: column;
 }
 
-.layer-tile {
-  display: flex; flex-direction: row;
-  align-items: center; justify-content: flex-start;
+.layer-btn {
+  display: flex;
+  align-items: baseline;
   gap: var(--space-2);
-  min-width: 96px;
-  height: 50px;
-  padding: 0 var(--space-4);
-  border-right: 1px solid var(--line);
-  white-space: nowrap;
+  padding: 5px 10px 5px 0;
 }
-.layer-tile:last-child { border-right: none; }
-.layer-tile:hover:not(.layer-tile--active) { background: var(--surface-hover); }
 
-/* Active: black tile, white text — clear inversion.
-   translateZ promotes the tile to its own compositing layer so the
-   opaque fill paints independently of the backdrop-filter parent. */
-.layer-tile--active {
-  background: #0A0A0B;
-  transform: translateZ(0);
-}
-.layer-tile--active .layer-tile__name { color: #FFFFFF; }
-
-/* ── Status dot — structural on/off indicator ── */
-.layer-tile__status {
+/* mark column — fixed width so text column never shifts */
+.layer-btn__mark {
   display: inline-flex;
-  align-items: center; justify-content: center;
-  width: 10px; height: 10px;
+  align-items: baseline;
+  width: 18px;
   flex-shrink: 0;
 }
-.layer-tile__dot { border-radius: var(--radius-pill); }
-.layer-tile__dot--off {
-  width: 7px; height: 7px;
-  border: 1.5px solid var(--ink-whisper);
-}
-.layer-tile__dot--on {
-  width: 9px; height: 9px;
-  background: #FFFFFF;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
-}
-.layer-tile:hover:not(.layer-tile--active) .layer-tile__dot--off {
-  border-color: var(--ink-mute);
+
+.layer-btn__mark--off {
+  font-family: var(--font-display);
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  color: var(--ink-whisper);
+  line-height: 1;
 }
 
-.layer-tile__name {
-  font-family: var(--font-display);
-  font-size: 8px; letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: var(--ink-mute);
-  line-height: 1.2;
+.layer-btn__mark--on {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: 0;
 }
-.layer-tile:hover:not(.layer-tile--active) .layer-tile__name { color: var(--ink); }
+
+.layer-btn__name {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-whisper);
+  line-height: 1;
+  transition: color var(--t-fast);
+}
+
+.layer-btn:hover .layer-btn__name { color: var(--ink-mute); }
+.layer-btn--active .layer-btn__name { color: var(--ink); }
 </style>
